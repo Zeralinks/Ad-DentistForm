@@ -77,8 +77,7 @@ export default function DentalLeadForm(){
     return t.join(",");
   };
 
-const API = import.meta.env.VITE_API_URL; 
-
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
   const submit = async e => {
     e.preventDefault();
     if (!validate()) return;
