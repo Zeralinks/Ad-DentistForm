@@ -77,19 +77,24 @@ export default function DentalLeadForm(){
     return t.join(",");
   };
 
-  /* submit */
-  const submit=async e=>{
+const API = import.meta.env.VITE_API_URL; 
+
+  const submit = async e => {
     e.preventDefault();
-    if(!validate()) return;
-    const fd=new FormData();
-    Object.entries({...form,tags:buildTags()})
-      .forEach(([k,v])=>fd.append(k,Array.isArray(v)?v.join(","):v));
-    try{
-      const res=await fetch("http://localhost:8000/api/lead/",{
-        method:"POST",body:fd,headers:{Accept:"application/json"}});
+    if (!validate()) return;
+
+    const fd = new FormData();
+    Object.entries({ ...form, tags: buildTags() })
+          .forEach(([k, v]) => fd.append(k, Array.isArray(v) ? v.join(",") : v));
+    try {
+      const res = await fetch(`${API}/api/lead/`, {
+        method: "POST",
+        body: fd,
+        headers: { Accept: "application/json" }
+      });
       res.ok ? (toast.success("Submitted!"), setSent(true))
-             :  toast.error("Submission error");
-    }catch{
+            :  toast.error("Submission error");
+    } catch {
       toast.error("Network error");
     }
   };
