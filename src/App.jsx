@@ -24,8 +24,8 @@ function App() {
           <Route path="follow-ups" element={<FollowUpSection />} />
           <Route path="integrations" element={<IntegrationsSection />} />
           <Route path="settings" element={<SettingsSection />} />
-
         </Route>
+        <Route i element={<LandingPage />} />
       </Routes>    
     </BrowserRouter>
   )
