@@ -44,8 +44,7 @@ const AppointmentsSection = () => {
     );
   };
 
-  // NOTE: Your mock dates are in 2024. If you want "today" to show items,
-  // either adjust mocks or use the withRecentDates helper we added earlier.
+
   const todayStr = new Date().toISOString().split("T")[0];
   const todayAppointments = appointments.filter((apt) => apt.date === todayStr);
 
