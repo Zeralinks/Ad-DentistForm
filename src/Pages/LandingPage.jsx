@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Clock, ShieldCheck, Smile } from "lucide-react";
+import SmallSpinner from "../components/SmallSpinner";
 
 /* palette */
 const COLORS = {
@@ -78,25 +79,31 @@ export default function DentalLeadForm(){
   };
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-  const submit = async e => {
-    e.preventDefault();
-    if (!validate()) return;
 
-    const fd = new FormData();
-    Object.entries({ ...form, tags: buildTags() })
-          .forEach(([k, v]) => fd.append(k, Array.isArray(v) ? v.join(",") : v));
-    try {
-      const res = await fetch(`${API}/api/lead/`, {
-        method: "POST",
-        body: fd,
-        headers: { Accept: "application/json" }
-      });
-      res.ok ? (toast.success("Submitted!"), setSent(true))
-            :  toast.error("Submission error");
-    } catch {
-      toast.error("Network error");
-    }
-  };
+const [loading, setLoading] = useState(false);
+
+const submit = async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
+
+  setLoading(true); // Start loading
+
+  const fd = new FormData();
+  Object.entries({ ...form, tags: buildTags() })
+        .forEach(([k, v]) => fd.append(k, Array.isArray(v) ? v.join(",") : v));
+  try {
+    const res = await fetch(`${API}/api/lead/`, {
+      method: "POST",
+      body: fd,
+      headers: { Accept: "application/json" },
+    });
+    res.ok ? (toast.success("Submitted!"), setSent(true)) : toast.error("Submission error");
+  } catch {
+    toast.error("Network error");
+  } finally {
+    setLoading(false); // Stop loading
+  }
+};
 
   /* style helper */
   const base="w-full px-4 py-3 border rounded-xl focus:ring-2";
@@ -282,13 +289,27 @@ const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
                     Next
                   </button>
                 )}
-                {step===2 && (
-                  <button type="submit"
-                          className="px-8 py-3 rounded-full text-white shadow-md hover:scale-105 transition"
-                          style={{background:`linear-gradient(90deg,${COLORS.grad1},${COLORS.grad2})`}}>
-                    Submit
+                {step === 2 && (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`px-8 py-3 rounded-full text-white shadow-md transition flex items-center justify-center gap-2 
+                      ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105'}`}
+                    style={{
+                      background: `linear-gradient(90deg, ${COLORS.grad1}, ${COLORS.grad2})`
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <SmallSpinner />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <span>Submit</span>
+                    )}
                   </button>
                 )}
+
               </div>
             </form>
 
