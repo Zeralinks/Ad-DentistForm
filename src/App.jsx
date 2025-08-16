@@ -8,6 +8,8 @@ import AppointmentsSection from './components/DashboardPage/AppointmentSection'
 import FollowUpSection from './components/DashboardPage/FollowUpSection'
 import IntegrationsSection from './components/DashboardPage/IntergrationSection'
 import SettingsSection from './components/DashboardPage/SettingsSection'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './Pages/LoginPage'
 
 
 function App() {
@@ -17,7 +19,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route index element={<LandingPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} >
+        <Route path='login' element={<LoginPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}>
           <Route index element={<DashboardOverview />} />
           <Route path="leads" element={<LeadsSection/>} />
           <Route path="appointments" element={<AppointmentsSection/>} />
@@ -25,7 +28,6 @@ function App() {
           <Route path="integrations" element={<IntegrationsSection />} />
           <Route path="settings" element={<SettingsSection />} />
         </Route>
-        <Route i element={<LandingPage />} />
       </Routes>    
     </BrowserRouter>
   )
