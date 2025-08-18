@@ -92,12 +92,11 @@ const submit = async (e) => {
   Object.entries({ ...form, tags: buildTags() })
         .forEach(([k, v]) => fd.append(k, Array.isArray(v) ? v.join(",") : v));
   try {
-    const res = await fetch(`${API}/api/lead/`, {
-      method: "POST",
-      body: fd,
-      headers: { Accept: "application/json" },
-    });
-    res.ok ? (toast.success("Submitted!"), setSent(true)) : toast.error("Submission error");
+    const res = await fetch(`${API}/api/lead/`, { method:"POST", body: fd, headers:{Accept:"application/json"} });
+    if (!res.ok) { toast.error("Submission error"); return; }
+    const data = await res.json(); // { qualification_status, qualification_score, ... }
+    toast.success("Submitted!");
+    setSent({ status: data.qualification_status, score: data.qualification_score });
   } catch {
     toast.error("Network error");
   } finally {
@@ -121,16 +120,17 @@ const submit = async (e) => {
       <ToastContainer position="top-right" autoClose={4500}/>
 
       {sent ? (
-        /* success screen */
-        <section className="min-h-screen flex items-center justify-center"
-                 style={{background:`linear-gradient(${COLORS.bgFrom},${COLORS.bgTo})`}}>
-          <div className="bg-white rounded-3xl shadow-2xl p-12 text-center max-w-md">
-            <h2 className="text-3xl font-bold mb-2" style={{color:COLORS.grad1}}>
-              🎉 All set!
-            </h2>
-            <p>We’ll contact you shortly.</p>
-          </div>
-        </section>
+         <section className="min-h-screen flex items-center justify-center" style={{background:`linear-gradient(${COLORS.bgFrom},${COLORS.bgTo})`}}>
+            <div className="bg-white rounded-3xl shadow-2xl p-12 text-center max-w-md">
+              <h2 className="text-3xl font-bold mb-2" style={{color:COLORS.grad1}}>🎉 All set!</h2>
+              {sent.status && (
+                <p className="mt-2 text-gray-700">
+                  Pre-qualification: <span className="font-semibold capitalize">{sent.status}</span> ({sent.score})
+                </p>
+              )}
+              <p className="mt-3">We’ll contact you shortly.</p>
+            </div>
+          </section>
       ) : (
         /* form screen */
         <section className="min-h-screen flex items-center justify-center py-20 px-4"
