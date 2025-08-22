@@ -16,6 +16,15 @@ export async function login(data) {
     }
 }
 
+export async function createLead(payload) {
+  try {
+    const res = await api.post("api/leads/", payload);
+    return res.data;
+  } catch (err) {
+    throw new Error(extractError(err));
+  }
+}
+
 // GET /api/leads/
 export async function fetchLeads() {
   try {

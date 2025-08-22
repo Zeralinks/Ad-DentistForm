@@ -3,10 +3,9 @@ import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { CheckCircle2, Search as SearchIcon, Info, RefreshCcw, Tag } from "lucide-react";
-
 import Card from "../Card";
 import Button from "../Button";
-import { fetchLeads, updateLead } from "../../services/apiBlog";
+import { createLead, fetchLeads, updateLead } from "../../services/apiBlog";
 
 const qualColor = (q) => ({
   qualified: "bg-green-100 text-green-800",
@@ -18,12 +17,25 @@ export default function LeadsSection() {
   const qc = useQueryClient();
   const [query, setQuery] = useState("");
   const [filterQ, setFilterQ] = useState("all");
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data: leads = [], isLoading, isFetching } = useQuery({
     queryKey: ["leads"],
     queryFn: fetchLeads,
     refetchInterval: 10000, // poll every 10s so new leads appear
   });
+
+  
+  const createMut = useMutation({
+    mutationFn: createLead,
+    onSuccess: () => {
+      toast.success("Lead added");
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      setShowCreate(false);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
 
   const patchLead = useMutation({
     mutationFn: ({ id, data }) => updateLead(id, data),
@@ -61,6 +73,13 @@ export default function LeadsSection() {
             <RefreshCcw size={16} className={isFetching ? "animate-spin mr-2" : "mr-2"} />
             Refresh
           </Button>
+          <Button
+            onClick={() => setShowCreate(true)}
+            className="ml-2"
+          >
+            + Add Lead
+          </Button>
+
         </div>
       </div>
 
@@ -206,6 +225,81 @@ export default function LeadsSection() {
             </tbody>
           </table>
         </div>
+        {showCreate && (
+            <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Add Lead</h3>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    // build payload
+                    const payload = {
+                      name: fd.get("name")?.trim() || "",
+                      email: fd.get("email")?.trim() || "",
+                      phone: fd.get("phone")?.trim() || "",
+                      source: fd.get("source") || "",
+                      service: fd.get("service") || "",
+                      insurance: fd.get("insurance") || "",
+                      urgency: fd.get("urgency") || "",
+                      situation: fd.get("situation") || "",
+                      notes: fd.get("notes") || "",
+                      // optional qualification direct from modal
+                      qualification: fd.get("qualification") || "nurture",
+                      qualification_score: Number(fd.get("score") || 0),
+                      qualification_reasons: (fd.get("reasons") || "")
+                        .split(",")
+                        .map(s => s.trim())
+                        .filter(Boolean),
+                      tags: (fd.get("tags") || "")
+                        .split(",")
+                        .map(s => s.trim())
+                        .filter(Boolean),
+                    };
+                    createMut.mutate(payload);
+                  }}
+                  className="space-y-3"
+                >
+                  <div className="grid grid-cols-2 gap-3">
+                    <input name="name" placeholder="Full name" className="border rounded-lg px-3 py-2" />
+                    <input name="email" placeholder="Email" className="border rounded-lg px-3 py-2" />
+                    <input name="phone" placeholder="Phone" className="border rounded-lg px-3 py-2 col-span-2" />
+                    <input name="service" placeholder="Service" className="border rounded-lg px-3 py-2" />
+                    <input name="source" placeholder="Source (e.g. manual)" className="border rounded-lg px-3 py-2" />
+                    <input name="insurance" placeholder="Insurance" className="border rounded-lg px-3 py-2" />
+                    <input name="urgency" placeholder="Urgency (today / this week / ...)" className="border rounded-lg px-3 py-2" />
+                    <input name="situation" placeholder="Situation (need)" className="border rounded-lg px-3 py-2 col-span-2" />
+                    <textarea name="notes" placeholder="Notes" className="border rounded-lg px-3 py-2 col-span-2" />
+                  </div>
+
+                  <div className="border-t pt-3 mt-3">
+                    <p className="text-sm font-medium mb-2">Qualification (optional)</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <select name="qualification" className="border rounded-lg px-3 py-2">
+                        <option value="qualified">Qualified</option>
+                        <option value="nurture"  defaultValue> Nurture</option>
+                        <option value="disqualified">Disqualified</option>
+                      </select>
+                      <input name="score" type="number" min="0" max="100" placeholder="Score"
+                            className="border rounded-lg px-3 py-2" />
+                      <input name="reasons" placeholder="Reasons (comma-separated)"
+                            className="border rounded-lg px-3 py-2 col-span-2" />
+                      <input name="tags" placeholder="Tags (comma-separated)"
+                            className="border rounded-lg px-3 py-2 col-span-2" />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancel</Button>
+                    <Button type="submit" disabled={createMut.isLoading}>
+                      {createMut.isLoading ? "Saving…" : "Save Lead"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
       </Card>
     </div>
   );
